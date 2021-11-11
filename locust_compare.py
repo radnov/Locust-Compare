@@ -32,23 +32,17 @@ class LocustComparer:
         return results
 
     def validate(self, results):
-        results_output = (
+        print(
             f'Threshold factor: {self._threshold}\n\n'
             f'Difference factors:\n{results}\n'
         )
 
         if all(result <= self._threshold for result in results.array):
-            print(
-                f'Success!\n\n' + results_output
-            )
+            sys.exit()
         elif any(result > self._threshold for result in results.array):
-            sys.exit(
-                f'Some of the requests are above the given threshold factor!\n\n' + results_output
-            )
+            sys.exit('Some of the requests are above the given threshold factor!')
         else:
-            sys.exit(
-                f'An error occurred!\n\n' + results_output
-            )
+            sys.exit('An error occurred!')
 
 
 def main():
