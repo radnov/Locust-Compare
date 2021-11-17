@@ -4,10 +4,9 @@ Locust-Compare
 This script is used to compare the results of the previous Locust run with the current one.
 This can be used in a Jenkins pipeline to determine if you want to pass/fail the build step based on the differences.
 
-Sample usage: CI/CI compare against previous run (make sure you have atleast 1 locust run)
+Sample usage: CI/CI compare against previous run (make sure you have at least 1 locust run)
   $ python locust_compare.py prefix_stats_previous.csv prefix_stats.csv --column-name 90% --threshold 1
 """
-
 import pandas as pd
 import argparse
 import sys
@@ -27,9 +26,9 @@ class LocustComparer:
         merged_df = pd.merge(new_df, old_df, on=['Type', 'Name'], how='outer', suffixes=('_new', '_old'))
         compared_columns = merged_df[['Type', 'Name', f'{column_name}_new', f'{column_name}_old']]
         results = compared_columns[f'{column_name}_new'] / compared_columns[f'{column_name}_old']
-        print(f'Comparison:\n {compared_columns}\n\n')
+        print(f'Comparison for {column_name} column:\n {compared_columns}\n\n')
 
-        return results
+        return results.add_prefix(f'({column_name})_')
 
     def validate(self, results):
         print(
@@ -78,8 +77,12 @@ def main():
     args = parser.parse_args()
 
     comparer = LocustComparer(args.previous, args.current, args.threshold)
+    results = pd.Series([], dtype=float)
 
-    comparer.validate(comparer.compare(args.column_name))
+    for column in args.column_name.split(';'):
+        results = results.append(comparer.compare(column))
+
+    comparer.validate(results)
 
 
 if __name__ == '__main__':
