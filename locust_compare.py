@@ -29,7 +29,7 @@ class LocustComparer:
         merged_df = pd.merge(new_df, old_df, on=['Type', 'Name'], how='outer', suffixes=('_new', '_old'))
         compared_columns = merged_df[['Type', 'Name', f'{column_name}_new', f'{column_name}_old']]
         results = compared_columns[f'{column_name}_new'] / compared_columns[f'{column_name}_old']
-        print(f'Comparison for {column_name} column:\n {compared_columns}\n\n')
+        print(f'Comparison for {column_name} column:\n {compared_columns.to_string()}\n\n')
 
         return results.add_prefix(f'({column_name})_')
 
