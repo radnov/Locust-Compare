@@ -1,11 +1,14 @@
 """
 Locust-Compare
 
-This script is used to compare the results of the previous Locust run with the current one.
+This script is used to compare the results of a previous/baseline Locust run with the current one.
 This can be used in a Jenkins pipeline to determine if you want to pass/fail the build step based on the differences.
 
-Sample usage: CI/CI compare against previous run (make sure you have at least 1 locust run)
+Compare single column between two report files, based on a given threshold:
   $ python locust_compare.py prefix_stats_previous.csv prefix_stats.csv --column-name 90% --threshold 1
+
+Compare multiple columns between two report files, based on a given threshold:
+  $ python locust_compare.py prefix_stats_previous.csv prefix_stats.csv --column-name 'Average Response Time;90%' --threshold 1
 """
 import pandas as pd
 import argparse
