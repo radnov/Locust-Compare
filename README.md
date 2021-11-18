@@ -1,3 +1,8 @@
+# TODO
+
+- [ ] update readme
+- [ ] publish to PyPi or use docker image
+
 # Locust-Compare
 
 Locust-Compare compares and validates the result of a Locusio.io run with the previous result.
