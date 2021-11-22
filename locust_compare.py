@@ -13,6 +13,7 @@ Compare multiple columns between two report files, based on a given threshold:
 import pandas as pd
 import argparse
 import sys
+from jinja2 import Environment, FileSystemLoader
 
 
 class LocustComparer:
@@ -21,6 +22,7 @@ class LocustComparer:
         self._previous = previous
         self._current = current
         self._threshold = threshold
+        self._comparison_tables = []
 
     def compare(self, column_name):
         new_df = pd.read_csv(self._current)
@@ -29,15 +31,23 @@ class LocustComparer:
         merged_df = pd.merge(new_df, old_df, on=['Type', 'Name'], how='outer', suffixes=('_new', '_old'))
         compared_columns = merged_df[['Type', 'Name', f'{column_name}_new', f'{column_name}_old']]
         results = compared_columns[f'{column_name}_new'] / compared_columns[f'{column_name}_old']
+
+        compared_columns.insert(len(compared_columns.columns), 'Results', results)
+        self._comparison_tables.append(dict(title=column_name, body=compared_columns.to_html()))
+
         print(f'Comparison for {column_name} column:\n {compared_columns.to_string()}\n\n')
 
         return results.add_prefix(f'({column_name})_')
 
+    def render_report(self, output_file):
+        template = Environment(loader=FileSystemLoader('.')).get_template("comparison-template.html")
+        html = template.render(tables=self._comparison_tables)
+        html_file = open(output_file, "w")
+        html_file.write(html)
+        html_file.close()
+
     def validate(self, results):
-        print(
-            f'Threshold factor: {self._threshold}\n\n'
-            f'Difference factors:\n{results}\n'
-        )
+        print(f'Threshold factor: {self._threshold}\n')
 
         if all(result <= self._threshold for result in results.array):
             sys.exit()
@@ -77,6 +87,14 @@ def main():
         help='The allowed threshold factor of difference (default: %(default)s).'
     )
 
+    parser.add_argument(
+        '-o', '--output',
+        required=False,
+        type=str,
+        default='comparison-report.html',
+        help='HTML report file name (default: %(default)s).'
+    )
+
     args = parser.parse_args()
 
     comparer = LocustComparer(args.previous, args.current, args.threshold)
@@ -84,6 +102,8 @@ def main():
 
     for column in args.column_name.split(';'):
         results = results.append(comparer.compare(column))
+
+    comparer.render_report(args.output)
 
     comparer.validate(results)
 
